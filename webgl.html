@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WebGL renderer</title>
+  </head>
+  <body>
+    <canvas id="glCanvas" width="640" height="480"></canvas>
+    <br>
+    <input type="file" id="fileInput" value="">
+    <button id="play">Play</button>
+    <button id="stop">Stop</button>
+    <button id="pause">Pause</button>
+    <script src="lib/gl-matrix-min.js" charset="utf-8"></script>
+    <script src="js/Shader.js" charset="utf-8"></script>
+    <script src="js/System.js" charset="utf-8"></script>
+    <script src="js/Scene.js" charset="utf-8"></script>
+    <script src="js/Camera.js" charset="utf-8"></script>
+    <script src="js/render.js" charset="utf-8"></script>
+    <script type="text/x-fragment-shader" id="particle-vert">
+      #version 300 es
+      precision mediump float;
+
+      uniform mat4 u_view;
+      uniform mat4 u_projection;
+
+      in vec3 in_position;
+
+      flat out int v_id;
+
+      void main () {
+        v_id = gl_VertexID;
+
+        gl_PointSize = 5.0;
+        gl_Position = u_projection * u_view * vec4(in_position, 1.0);
+      }
+    </script>
+    <script type="text/x-fragment-shader" id="particle-frag">
+      #version 300 es
+      precision mediump float;
+
+      flat in int v_id;
+
+      uniform float u_time;
+      uniform float u_deltaT;
+      uniform int u_nbParticles;
+
+      uniform sampler2D u_colors;
+
+      out vec4 out_color;
+
+      float fade(in int frame, in int size) {
+        float x = float(frame) / float(size);
+        return 1.0 - x;
+      }
+
+      void main () {
+        int currentFrame = int(floor(u_time / u_deltaT));
+        int vertexFrame = v_id / u_nbParticles;
+
+        if (vertexFrame <= currentFrame && currentFrame - 150 <= vertexFrame) {
+          vec4 color = texelFetch(u_colors, ivec2(v_id % u_nbParticles, 0), 0);
+          out_color = color * fade(currentFrame - vertexFrame, 150);
+        } else {
+          out_color = vec4(0.0);
+        }
+      }
+    </script>
+  </body>
+</html>
