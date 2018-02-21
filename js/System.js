@@ -60,7 +60,7 @@ class System {
     gl.bindTexture(gl.TEXTURE_2D, null)
   }
 
-  render (view, projection, time) {
+  render (view, projection, time, animated) {
     gl.useProgram(this.shaderProgram)
       gl.uniformMatrix4fv(
         gl.getUniformLocation(this.shaderProgram, 'u_view'),false, view)
@@ -73,6 +73,8 @@ class System {
         gl.getUniformLocation(this.shaderProgram, 'u_deltaT'), 10.0)
       gl.uniform1i(
         gl.getUniformLocation(this.shaderProgram, 'u_nbParticles'), this.nbParticles)
+      gl.uniform1i(
+        gl.getUniformLocation(this.shaderProgram, 'u_animated'), animated)
 
       gl.bindVertexArray(this.vao)
         gl.bindTexture(gl.TEXTURE_2D, this.colors)

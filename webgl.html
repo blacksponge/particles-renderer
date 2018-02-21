@@ -11,6 +11,7 @@
     <button id="play">Play</button>
     <button id="stop">Stop</button>
     <button id="pause">Pause</button>
+    <label><input type="checkbox" id="animated" checked> Animated</label>
     <script src="lib/gl-matrix-min.js" charset="utf-8"></script>
     <script src="js/Shader.js" charset="utf-8"></script>
     <script src="js/System.js" charset="utf-8"></script>
@@ -45,6 +46,7 @@
       uniform float u_deltaT;
       uniform int u_nbParticles;
 
+      uniform int u_animated;
       uniform sampler2D u_colors;
 
       out vec4 out_color;
@@ -55,6 +57,11 @@
       }
 
       void main () {
+        if (u_animated == 0) {
+          out_color = texelFetch(u_colors, ivec2(v_id % u_nbParticles, 0), 0);
+          return;
+        }
+
         int currentFrame = int(floor(u_time / u_deltaT));
         int vertexFrame = v_id / u_nbParticles;
 

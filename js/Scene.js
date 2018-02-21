@@ -13,6 +13,8 @@ class Scene {
     this.zFar = 100.0
 
     this.startTime = 0.0
+    this.pausedTime = 0.0
+    this.animated = true
 
     this.view = mat4.fromTranslation(mat4.create(), [0.0, 0.0, -3.0])
   }
@@ -23,9 +25,7 @@ class Scene {
 
   start () {
     if (!this.running) {
-      if (!this.paused) {
-        this.startTime = 0.0
-      } else {
+      if (this.paused) {
         let now = Date.now()
         this.startTime += now - this.pausedTime
         this.paused = false
@@ -37,6 +37,7 @@ class Scene {
 
   stop () {
     this.running = false
+    this.startTime = 0.0
 
     if (this.paused) {
       this.paused = false
@@ -67,7 +68,7 @@ class Scene {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     for (let obj of this.objects) {
-      obj.render(this.view, projection, elapsedTime)
+      obj.render(this.view, projection, elapsedTime, this.animated)
     }
 
     if (this.running) {
@@ -82,5 +83,12 @@ class Scene {
     document.getElementById('play').onclick = this.start.bind(this)
     document.getElementById('stop').onclick = this.stop.bind(this)
     document.getElementById('pause').onclick = this.pause.bind(this)
+    document.getElementById('animated').onchange = (e) => {
+      this.animated = e.target.checked
+      this.stop()
+      this.start()
+    }
+
+    this.animated = document.getElementById('animated').checked
   }
 }

@@ -45,7 +45,8 @@ function initSimulation (rawData) {
 
   scene = new Scene()
   let camera = new Camera(pos)
-  scene.view = camera.view
+  //scene.view = camera.view
   scene.add(new System(pos, 'particle-vert', 'particle-frag', nbParticles))
   scene.initControl()
+  scene.start()
 }
