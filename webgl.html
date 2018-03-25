@@ -5,13 +5,16 @@
     <title>WebGL renderer</title>
   </head>
   <body>
+    <div>
+      <span id="fps"></span>
+    </div>
     <canvas id="glCanvas" width="640" height="480"></canvas>
-    <br>
-    <input type="file" id="fileInput" value="">
-    <button id="play">Play</button>
-    <button id="stop">Stop</button>
-    <button id="pause">Pause</button>
-    <label><input type="checkbox" id="animated" checked> Animated</label>
+    <div>
+      <input type="file" id="fileInput" value="">
+      <button id="play">Play</button>
+      <button id="stop">Stop</button>
+      <button id="pause">Pause</button>
+    </div>
     <script src="lib/gl-matrix-min.js" charset="utf-8"></script>
     <script src="js/Shader.js" charset="utf-8"></script>
     <script src="js/System.js" charset="utf-8"></script>
@@ -42,11 +45,8 @@
 
       flat in int v_id;
 
-      uniform float u_time;
-      uniform float u_deltaT;
       uniform int u_nbParticles;
 
-      uniform int u_animated;
       uniform sampler2D u_colors;
 
       out vec4 out_color;
@@ -57,20 +57,8 @@
       }
 
       void main () {
-        if (u_animated == 0) {
-          out_color = texelFetch(u_colors, ivec2(v_id % u_nbParticles, 0), 0);
-          return;
-        }
-
-        int currentFrame = int(floor(u_time / u_deltaT));
-        int vertexFrame = v_id / u_nbParticles;
-
-        if (vertexFrame <= currentFrame && currentFrame - 150 <= vertexFrame) {
-          vec4 color = texelFetch(u_colors, ivec2(v_id % u_nbParticles, 0), 0);
-          out_color = color * fade(currentFrame - vertexFrame, 150);
-        } else {
-          out_color = vec4(0.0);
-        }
+        vec4 color = texelFetch(u_colors, ivec2(v_id % u_nbParticles, 0), 0);
+        out_color = color * fade(v_id, 150);
       }
     </script>
   </body>

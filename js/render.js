@@ -1,5 +1,8 @@
 const gl = initGl('glCanvas')
-let scene = null
+let scene = initSimulation()
+let system
+
+loadData(loadDataInSimulation)
 
 function initGl(id) {
   const canvas = document.getElementById('glCanvas')
@@ -10,9 +13,18 @@ function initGl(id) {
     return
   }
 
-  loadData(initSimulation)
-
   return gl
+}
+
+function initSimulation() {
+  let scene = new Scene()
+  scene.initControl()
+  scene.stop()
+  let fpsCounter = document.getElementById('fps')
+  setInterval(function () {
+    fps.innerText = Math.round(scene.fps)
+  }, 100);
+  return scene
 }
 
 function loadData (callback) {
@@ -35,7 +47,7 @@ function loadData (callback) {
   }
 }
 
-function initSimulation (rawData) {
+function loadDataInSimulation (rawData) {
   let pos = rawData.trim().split(/\s/).map(Number)
   let nbParticles = pos.shift()
   let deltaT = pos.shift() * 1000
@@ -43,10 +55,15 @@ function initSimulation (rawData) {
   if (pos.length % 3)
     pos = pos.slice(0, -pos.length % 3)
 
-  scene = new Scene()
   let camera = new Camera(pos)
   //scene.view = camera.view
-  scene.add(new System(pos, 'particle-vert', 'particle-frag', nbParticles))
-  scene.initControl()
+  scene.clear()
+  system = new System('particle-vert', 'particle-frag', nbParticles)
+  scene.deltaT = deltaT
+  scene.add(system)
   scene.start()
+
+  for (let i = 0; i < pos.length; i += nbParticles * 3) {
+    system.addFrame(pos.slice(i, i + nbParticles * 3))
+  }
 }

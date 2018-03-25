@@ -1,10 +1,12 @@
 `use strict`
 
 class System {
-  constructor (pos, vertexShaderName, fragmentShaderName, nbParticles) {
-    let vertices = new Float32Array(pos)
-    this.verticesNb = pos.length / 3
+  constructor (vertexShaderName, fragmentShaderName, nbParticles) {
     this.nbParticles = nbParticles
+    this.currentFrame = 0
+
+    this.vertices = new Float32Array(150 * 3 * nbParticles)
+    this.framesBuffer = new Array()
 
     this.shaderProgram = Shader.load(vertexShaderName, fragmentShaderName)
 
@@ -12,8 +14,7 @@ class System {
     this.vbo = gl.createBuffer()
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo)
-      // Transfert des données
-      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+      gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.DYNAMIC_DRAW)
     gl.bindBuffer(gl.ARRAY_BUFFER, null)
 
     // Allocation des VAO
@@ -30,6 +31,25 @@ class System {
     gl.bindVertexArray(null)
 
     this.genTexture()
+  }
+
+  addFrame(frame) {
+    this.framesBuffer.push(frame)
+  }
+
+  updateVBO() {
+    let newFrame
+    if ((newFrame = this.framesBuffer.shift()) != undefined) {
+      this.currentFrame ++
+      // Shift the array by the size of a frame to the right
+      this.vertices.copyWithin(3 * this.nbParticles)
+      // Store the new frame vertices at the beginning the array
+      this.vertices.set(newFrame)
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo)
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.vertices)
+      gl.bindBuffer(gl.ARRAY_BUFFER, null)
+    }
   }
 
   genColors () {
@@ -61,25 +81,20 @@ class System {
   }
 
   render (view, projection, time, animated) {
+    this.updateVBO()
     gl.useProgram(this.shaderProgram)
       gl.uniformMatrix4fv(
         gl.getUniformLocation(this.shaderProgram, 'u_view'),false, view)
       gl.uniformMatrix4fv(
         gl.getUniformLocation(this.shaderProgram, 'u_projection'), false, projection)
 
-      gl.uniform1f(
-        gl.getUniformLocation(this.shaderProgram, 'u_time'), time)
-      gl.uniform1f(
-        gl.getUniformLocation(this.shaderProgram, 'u_deltaT'), 10.0)
       gl.uniform1i(
         gl.getUniformLocation(this.shaderProgram, 'u_nbParticles'), this.nbParticles)
-      gl.uniform1i(
-        gl.getUniformLocation(this.shaderProgram, 'u_animated'), animated)
 
       gl.bindVertexArray(this.vao)
         gl.bindTexture(gl.TEXTURE_2D, this.colors)
 
-        gl.drawArrays(gl.POINTS, 0, this.verticesNb)
+        gl.drawArrays(gl.POINTS, 0, Math.min(this.currentFrame, 150) * this.nbParticles)
 
         gl.bindTexture(gl.TEXTURE_2D, null);
       gl.bindVertexArray(null)

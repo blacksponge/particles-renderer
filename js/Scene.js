@@ -12,9 +12,9 @@ class Scene {
     this.zNear = 0.1
     this.zFar = 100.0
 
-    this.startTime = 0.0
-    this.pausedTime = 0.0
-    this.animated = true
+    this.lastRender = 0
+    this.deltaT = 1000 / 30
+    this.fps = 0
 
     this.view = mat4.fromTranslation(mat4.create(), [0.0, 0.0, -3.0])
   }
@@ -23,13 +23,13 @@ class Scene {
     this.objects.push(object)
   }
 
+  clear () {
+    this.objects.length = 0
+  }
+
   start () {
     if (!this.running) {
-      if (this.paused) {
-        let now = Date.now()
-        this.startTime += now - this.pausedTime
-        this.paused = false
-      }
+      this.paused = false
       this.running = true
       window.requestAnimationFrame(this.mainLoop.bind(this))
     }
@@ -37,7 +37,6 @@ class Scene {
 
   stop () {
     this.running = false
-    this.startTime = 0.0
 
     if (this.paused) {
       this.paused = false
@@ -48,34 +47,34 @@ class Scene {
   pause () {
     this.running = false
     this.paused = true
-    this.pausedTime =  Date.now()
   }
 
   mainLoop (timestamp) {
-    if(!this.startTime) {
-      this.startTime = timestamp
-    }
+    console.log('plop')
+    if (timestamp >= this.lastRender + this.deltaT) {
+      this.fps = 1000 / (timestamp - this.lastRender)
+      this.lastRender = timestamp
 
-    let elapsedTime = timestamp - this.startTime
-    let projection = mat4.create()
+      let projection = mat4.create()
 
-    mat4.perspective(projection,
-      this.fov,
-      gl.canvas.clientWidth / gl.canvas.clientHeight,
-      this.zNear,
-      this.zFar)
+      mat4.perspective(projection,
+        this.fov,
+        gl.canvas.clientWidth / gl.canvas.clientHeight,
+        this.zNear,
+        this.zFar)
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-    for (let obj of this.objects) {
-      obj.render(this.view, projection, elapsedTime, this.animated)
-    }
-
-    if (this.running) {
-      window.requestAnimationFrame(this.mainLoop.bind(this))
-    } else if (!this.paused) {
-      // Clear après avoir stoppé
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+      for (let obj of this.objects) {
+        obj.render(this.view, projection)
+      }
+
+      if (this.running) {
+        window.requestAnimationFrame(this.mainLoop.bind(this))
+      } else if (!this.paused) {
+        // Clear après avoir stoppé
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+      }
     }
   }
 
@@ -83,12 +82,5 @@ class Scene {
     document.getElementById('play').onclick = this.start.bind(this)
     document.getElementById('stop').onclick = this.stop.bind(this)
     document.getElementById('pause').onclick = this.pause.bind(this)
-    document.getElementById('animated').onchange = (e) => {
-      this.animated = e.target.checked
-      this.stop()
-      this.start()
-    }
-
-    this.animated = document.getElementById('animated').checked
   }
 }
