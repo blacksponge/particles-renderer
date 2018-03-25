@@ -22,12 +22,10 @@ app.post('/simulation', upload.single('dataset'), (req, res) => {
   })
 
   simu.stdout.on('data', (data) => {
-    res.write(data)
+    io.emit('out', data)
   })
 
-  simu.on('close', (code) => {
-    res.end()
-  })
+  res.end()
 })
 
 http.listen(3000, function(){
