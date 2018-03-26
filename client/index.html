@@ -64,9 +64,17 @@
     </script>
     <script type="text/javascript">
       const socket = io()
+
+      socket.on('start', (opt) => {
+        scene.clear()
+        system = new System('particle-vert', 'particle-frag', opt.nbParticles)
+        scene.deltaT = opt.deltaT
+        scene.add(system)
+        scene.start()
+      })
+
       socket.on('out', (msg) => {
-        let u = new Uint8Array(msg)
-        console.log(String.fromCharCode(...u))
+        system.addFrame(msg)
       })
     </script>
   </body>

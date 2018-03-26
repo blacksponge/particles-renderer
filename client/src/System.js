@@ -45,6 +45,7 @@ class System {
       this.vertices.copyWithin(3 * this.nbParticles)
       // Store the new frame vertices at the beginning the array
       this.vertices.set(newFrame)
+      //console.log(newFrame, this.vertices)
 
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo)
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.vertices)

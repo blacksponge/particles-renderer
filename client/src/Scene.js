@@ -50,7 +50,6 @@ class Scene {
   }
 
   mainLoop (timestamp) {
-    console.log('plop')
     if (timestamp >= this.lastRender + this.deltaT) {
       this.fps = 1000 / (timestamp - this.lastRender)
       this.lastRender = timestamp
