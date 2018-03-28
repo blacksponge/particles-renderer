@@ -1,65 +1,59 @@
 'use strict'
 
 class Camera {
-  constructor (verticesData) {
-    this.computePosition(verticesData)
+  constructor () {
+    this.target = [0, 0, 0]
+    this.position = [0, 0, 3]
+    this.up = [0, 1, 0]
+    gl.canvas.onmousemove = this.updateCameraDirection.bind(this)
   }
 
-  computePosition (verticesData) {
-    /*
-    let res2 = vec3.create()
-    for (let n = 0; n < 10; n++) {
-      let res = vec3.create()
-      for (let i = 0; i < 1000000; i++) {
-        let norm = Camera.randomSurface(verticesData)
-        vec3.normalize(norm, norm)
-        vec3.add(res, norm, res)
-        //console.log(`Getting random surface (${norm[0]}, ${norm[1]}, ${norm[2]}). New norm = (${res[0]}, ${res[1]}, ${res[2]})`)
-      }
-      vec3.normalize(res, res)
-      vec3.add(res2, res2, res)
-      console.log(`(${res[0]}, ${res[1]}, ${res[2]})`)
-    }
-    vec3.normalize(res2, res2)
-    console.log(`Moyenne = (${res2[0]}, ${res2[1]}, ${res2[2]})`)
-    */
-    let target = vec3.create()
-    for (let id = 0; id < verticesData.length; id += 3) {
-      let currentVect = [verticesData[id], verticesData[id + 1], verticesData[id + 2]]
-      vec3.add(target, target, currentVect)
-    }
-    vec3.scale(target, target, 3 / verticesData.length)
-    this.target = target
-    this.position = [5, 5, 5]
-    this.up = [-1, -1, 1]
-  }
 
   get view () {
     return mat4.lookAt(mat4.create(), this.position, this.target, this.up)
   }
 
-  static randomSurface (verticesData) {
-    let a = vec3.fromValues(...this.randomVertex(verticesData))
-    let b = vec3.fromValues(...this.randomVertex(verticesData))
-    let c = vec3.fromValues(...this.randomVertex(verticesData))
-
-    let ab = vec3.create()
-    let ac = vec3.create()
-    let n = vec3.create()
-
-    vec3.subtract(ab, b, a)
-    vec3.subtract(ac, c, a)
-
-    return vec3.cross(n, ab, ac)
+  updateCameraDirection (e) {
+    if (e.buttons == 1 && e.shiftKey) {
+      this.moveEyesPosition(-e.movementX / 300, e.movementY / 300)
+    } else if (e.buttons == 1) {
+      this.moveEyesAngle(e.movementX / 300, e.movementY / 300)
+    }
   }
 
-  static randomVertex (verticesData) {
-    let verticesNb = verticesData.length / 3
-    let vertexId = Math.floor(Math.random() * verticesNb)
-    return [
-      verticesData[vertexId * 3],
-      verticesData[vertexId * 3 + 1],
-      verticesData[vertexId * 3 + 2]
-    ]
+  moveEyesPosition (posx, posy) {
+    let rightDirection = vec3.create()
+    let frontDirection = vec3.create()
+
+    vec3.subtract(frontDirection, this.target, this.position)
+    vec3.normalize(frontDirection, frontDirection)
+
+    vec3.cross(rightDirection, frontDirection, this.up)
+
+    vec3.scaleAndAdd(this.position, this.position, this.up, posy)
+    vec3.scaleAndAdd(this.target, this.target, this.up, posy)
+
+    vec3.scaleAndAdd(this.position, this.position, rightDirection, posx)
+    vec3.scaleAndAdd(this.target, this.target, rightDirection, posx)
+  }
+
+  moveEyesAngle (theta, phi) {
+    let frontDirection = vec3.create()
+    let rightDirection = vec3.create()
+
+    let yawQ = quat.create()
+    let pitchQ = quat.create()
+
+    vec3.subtract(frontDirection, this.target, this.position)
+    vec3.normalize(frontDirection, frontDirection)
+
+    vec3.cross(rightDirection, frontDirection, this.up)
+
+    quat.setAxisAngle(pitchQ, rightDirection, phi)
+    quat.setAxisAngle(yawQ, this.up, theta)
+
+    vec3.transformQuat(frontDirection, frontDirection, yawQ)
+    vec3.transformQuat(frontDirection, frontDirection, pitchQ)
+    vec3.add(this.target, this.position, frontDirection)
   }
 }

@@ -55,8 +55,6 @@ function loadDataInSimulation (rawData) {
   if (pos.length % 3)
     pos = pos.slice(0, -pos.length % 3)
 
-  let camera = new Camera(pos)
-  //scene.view = camera.view
   scene.clear()
   system = new System('particle-vert', 'particle-frag', nbParticles)
   scene.deltaT = deltaT

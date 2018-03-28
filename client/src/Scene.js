@@ -1,6 +1,6 @@
 'use strict'
 class Scene {
-  constructor () {
+  constructor (canvas) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -16,7 +16,7 @@ class Scene {
     this.deltaT = 1000 / 30
     this.fps = 0
 
-    this.view = mat4.fromTranslation(mat4.create(), [0.0, 0.0, -3.0])
+    this.camera = new Camera()
   }
 
   add (object) {
@@ -49,8 +49,15 @@ class Scene {
     this.paused = true
   }
 
+  resize () {
+    gl.canvas.width = window.innerWidth
+    gl.canvas.height = window.innerHeight - 150
+    gl.viewport(0, 0, gl.canvas.clientWidth, gl.canvas.clientHeight);
+  }
+
   mainLoop (timestamp) {
     if (timestamp >= this.lastRender + this.deltaT) {
+      this.resize()
       this.fps = 1000 / (timestamp - this.lastRender)
       this.lastRender = timestamp
 
@@ -65,7 +72,7 @@ class Scene {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
       for (let obj of this.objects) {
-        obj.render(this.view, projection)
+        obj.render(this.camera.view, projection)
       }
 
       if (this.running) {

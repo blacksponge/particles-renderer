@@ -3,6 +3,13 @@
   <head>
     <meta charset="utf-8">
     <title>WebGL renderer</title>
+    <style media="screen">
+      body, html {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
   <body>
     <div>
@@ -18,11 +25,11 @@
     <script src="lib/gl-matrix-min.js" charset="utf-8"></script>
     <script src="src/Shader.js" charset="utf-8"></script>
     <script src="src/System.js" charset="utf-8"></script>
-    <script src="src/Scene.js" charset="utf-8"></script>
     <script src="src/Camera.js" charset="utf-8"></script>
+    <script src="src/Scene.js" charset="utf-8"></script>
     <script src="src/render.js" charset="utf-8"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="text/x-fragment-shader" id="particle-vert">
+    <script type="text/x-vertex-shader" id="particle-vert">
       #version 300 es
       precision mediump float;
 
@@ -36,8 +43,8 @@
       void main () {
         v_id = gl_VertexID;
 
-        gl_PointSize = 5.0;
         gl_Position = u_projection * u_view * vec4(in_position, 1.0);
+        gl_PointSize = 20.0 / gl_Position.w;
       }
     </script>
     <script type="text/x-fragment-shader" id="particle-frag">
