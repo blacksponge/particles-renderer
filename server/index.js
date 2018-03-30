@@ -7,6 +7,10 @@ const upload = multer({dest: 'uploads'})
 const child_process = require('child_process')
 const fs = require('fs')
 const net = require('net')
+const SSH = require('simple-ssh')
+const config = require('./config')
+
+let ssh = new SSH(config.ssh)
 
 let server = net.createServer((c) => {
 
@@ -22,11 +26,11 @@ let server = net.createServer((c) => {
       nbParticles = data.readInt32BE(0)
       nbParticlesPosTot = nbParticles * 3
       frame = new Float64Array(nbParticlesPosTot)
-
       let opt = {
         nbParticles: nbParticles,
         deltaT: data.readDoubleLE(4)
       }
+      console.log(opt)
 
       io.emit('start', opt)
       data = data.slice(12)
@@ -49,19 +53,18 @@ let server = net.createServer((c) => {
 app.use(express.static('../client'))
 
 app.post('/simulation', upload.single('dataset'), (req, res) => {
-  let dataIn = fs.openSync(req.file.path, 'r')
+
+
   let args = [
     '-a', req.body.algorithm || 'bruteforce',
     '-n', req.body.nbIter || '2500',
     '-i', req.body.deltaT || '0.01'
   ]
 
-  let simu = child_process.spawn('../../nbody/bin/nbody', args, {
-    stdio: [dataIn, 'pipe', process.stdout]
-  })
-
-  simu.stdout.on('data', (data) => {
-    io.emit('out', data)
+  fs.readFile(req.file.path, {encoding: 'utf-8'}, (err, data) => {
+    ssh.exec(`cat > nbody-master/datasets/${req.file.filename}`, {
+      in: data
+    }).start()
   })
 
   res.end()
