@@ -53,26 +53,46 @@ let server = net.createServer((c) => {
 app.use(express.static('../client'))
 
 app.post('/simulation', upload.single('dataset'), (req, res) => {
-
-
   let args = [
     '-a', req.body.algorithm || 'bruteforce',
     '-n', req.body.nbIter || '2500',
     '-i', req.body.deltaT || '0.01'
   ]
+  let strArgs = args.join(' ')
 
   fs.readFile(req.file.path, {encoding: 'utf-8'}, (err, data) => {
+    ssh.reset()
     ssh.exec(`cat > nbody-master/datasets/${req.file.filename}`, {
       in: data
+    }).exec(`cat > job-${req.file.filename}.sh`, {
+      in: `#!/bin/bash
+
+#SBATCH -t 10:00
+#SBATCH --job-name nbody
+#SBATCH --mail-type BEGIN,END
+#SBATCH --output=nbody.out
+#SBATCH --error=nbody.err
+#SBATCH
+
+module load intel/2017
+
+nbody-master/bin/nbody ${strArgs} -s ${config.socketIp} < nbody-master/datasets/${req.file.filename}
+    `}).exec(`sbatch job-${req.file.filename}.sh`,{
+      exit: ((code, out, err) => {
+        if (code == 0) {
+          let jobId = out.split(' ').slice(-1)
+          res.status(202).json({jobId: Number(jobId)})
+        } else {
+          res.status(500).json({errorMsg: err.trim()})
+        }
+      })
     }).start()
   })
-
-  res.end()
 })
 
-http.listen(3000, () => {
-  console.log('web server listening on *:3000');
+http.listen(config.webPort, () => {
+  console.log(`web server listening on *:${config.webPort}`);
 })
 server.listen(3001, () => {
-  console.log('chaussette listening on *:3001')
+  console.log(`chaussette listening on *:${config.socketPort}`)
 })
