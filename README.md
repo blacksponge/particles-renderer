@@ -12,16 +12,23 @@ A configuration file, named `config.js` should be created in the `server` direct
 module.exports = {
   ssh: {
       // insert ssh configuration here
-  }
+  },
+  webPort: 3000,
+  socketPort: 3001,
+  socketIp: 'xx.xx.xx.xx' // external ip of the machine the server is running on
 }
 
 ```
 
 The ssh configuration format can be found at https://www.npmjs.com/package/simple-ssh.
 
+To start the server execute first a `npm install` to fetch the dependencies then `node index.js`.
 ## References
 
 https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext  
 https://www.khronos.org/opengl/  
 https://gpfault.net/posts/webgl2-particles.txt.html  
-https://www.html5rocks.com/en/tutorials/pointerlock/intro/  
+https://www.html5rocks.com/en/tutorials/pointerlock/intro/
+
+http://expressjs.com/en/4x/api.html  
+https://www.npmjs.com/package/simple-ssh
