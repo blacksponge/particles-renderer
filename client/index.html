@@ -109,7 +109,7 @@
         let formData = new FormData(form)
         let req = new XMLHttpRequest()
         req.onload = (e) => {
-          if (req.status == 200) {
+          if (req.status == 202) {
             formInfo.textContent = 'Job submitted'
           } else {
             formInfo.textContent = 'An error occurred'
