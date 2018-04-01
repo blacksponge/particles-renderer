@@ -13,11 +13,23 @@
   </head>
   <body>
     <div>
-      <span id="fps"></span>
+      <span id="fps"></span><span id="formInfo"></span>
     </div>
     <canvas id="glCanvas" width="640" height="480"></canvas>
     <div>
-      <input type="file" id="fileInput" value="">
+      <form>
+        <fieldset>
+          <legend>Simulation parameters</legend>
+          <input type="file" id="fileInput" value="" name="dataset">
+          <input type="number" name="nbIter" value="2500" min="0">
+          <input type="number" name="deltaT" value="0.01" min="0.01" step="0.01">
+          <select name="algorithm">
+            <option value="bruteforce" selected>Bruteforce</option>
+            <option value="barneshut">Barnes Hut</option>
+          </select>
+          <input type="submit" value="Submit">
+        </fieldset>
+      </form>
       <button id="play">Play</button>
       <button id="stop">Stop</button>
       <button id="pause">Pause</button>
@@ -70,6 +82,9 @@
       }
     </script>
     <script type="text/javascript">
+      /*
+       * WebSocket
+       */
       const socket = io()
 
       socket.on('start', (opt) => {
@@ -83,6 +98,28 @@
       socket.on('out', (msg) => {
         system.addFrame(msg)
       })
+
+      /*
+       * Form handling
+       */
+
+      let form = document.querySelector('form')
+      let formInfo = document.getElementById('formInfo')
+      form.onsubmit = (e) => {
+        let formData = new FormData(form)
+        let req = new XMLHttpRequest()
+        req.onload = (e) => {
+          if (req.status == 200) {
+            formInfo.textContent = 'Job submitted'
+          } else {
+            formInfo.textContent = 'An error occurred'
+          }
+          console.log(req.responseText)
+        }
+        req.open('POST', '/simulation')
+        req.send(formData)
+        return false
+      }
     </script>
   </body>
 </html>
