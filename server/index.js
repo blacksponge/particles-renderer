@@ -20,8 +20,8 @@ let server = net.createServer((c) => {
   let frame = null
 
   c.on('data', (data) => {
-    console.log(nbParticles, data)
-    console.log(data.length)
+    //console.log(nbParticles, data)
+    //console.log(data.length)
     if (nbParticles == 0) {
       nbParticles = data.readInt32BE(0)
       nbParticlesPosTot = nbParticles * 3
@@ -30,16 +30,16 @@ let server = net.createServer((c) => {
         nbParticles: nbParticles,
         deltaT: data.readDoubleLE(4)
       }
-      console.log(opt)
+      //console.log(opt)
 
       io.emit('start', opt)
       data = data.slice(12)
     }
 
-    console.log(data.length)
+    //console.log(data.length)
     for (let i = 0; i < data.length; i += 8) {
       frame[nbParticlesPos] = data.readDoubleLE(i)
-      console.log(nbParticlesPos, i)
+      //console.log(nbParticlesPos, i)
       nbParticlesPos ++
       if (nbParticlesPos == nbParticlesPosTot) {
         nbParticlesPos = 0
@@ -56,7 +56,9 @@ app.post('/simulation', upload.single('dataset'), (req, res) => {
   let args = [
     '-a', req.body.algorithm || 'bruteforce',
     '-n', req.body.nbIter || '2500',
-    '-i', req.body.deltaT || '0.01'
+    '-i', req.body.deltaT || '0.01',
+    '-t', req.body.threshold || '0.5',
+    '-u', req.body.frameRate || '1',
   ]
   let strArgs = args.join(' ')
 
